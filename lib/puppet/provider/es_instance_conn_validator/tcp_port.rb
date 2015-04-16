@@ -38,14 +38,14 @@ Puppet::Type.type(:es_instance_conn_validator).provide(:tcp_port) do
     # If `#create` is called, that means that `#exists?` returned false, which
     # means that the connection could not be established... so we need to
     # cause a failure here.
-    raise Puppet::Error, "Unable to connect to ES instance ! (#{@validator.instance_server}:#{@validator.instance_port})"
+    raise Puppet::Error, "Unable to connect to ES instance #{@validator.instance_name} on #{@validator.instance_server}:#{@validator.instance_port}"
   end
 
   private
 
   # @api private
   def validator
-    @validator ||= Puppet::Util::EsInstanceValidator.new(resource[:server], resource[:port])
+    @validator ||= Puppet::Util::EsInstanceValidator.new(resource[:name])
   end
 
 end

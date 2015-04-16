@@ -7,9 +7,18 @@ module Puppet
       attr_reader :instance_server
       attr_reader :instance_port
 
-      def initialize(instance_server, instance_port)
-        @instance_server = instance_server
-        @instance_port   = instance_port
+      def initialize(instance_name)
+        @instance_name = instance_name
+
+        IO.popen("ps aux | grep elasticsearch-#{instance_name} | head -1 | awk '{print $2}'") { |pipe| $instance_pid = pipe.read.chomp }
+        IO.popen("netstat -tlnp | grep #{$instance_pid} | head -1 | sed -r \"s/.*\s(([0-9]{1,3}\.){3}[0-9]{1,3}):([0-9]+)\s.*/\\1/\"") { |pipe| $listening_ip = pipe.read.chomp }
+        IO.popen("netstat -tlnp | grep #{$instance_pid} | head -1 | sed -r \"s/.*\s(([0-9]{1,3}\.){3}[0-9]{1,3}):([0-9]+)\s.*/\\3/\"") { |pipe| @instance_port = pipe.read.chomp.to_i }
+
+        if $listening_ip.eql? '0.0.0.0'
+          @instance_server = '127.0.0.1'
+        else
+          @instance_server = $listening_ip
+        end
       end
 
       # Utility method; attempts to make an https connection to the Elasticsearch instance.
@@ -23,7 +32,7 @@ module Puppet
             TCPSocket.new(@instance_server, @instance_port).close
             true
           rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH => e
-            Puppet.debug "Unable to connect to Elasticsearch instance (#{@instance_server}:#{@instance_port}): #{e.message}"
+            Puppet.debug "Unable to connect to Elasticsearch instance #{@instance_name} on #{@instance_server}:#{@instance_port}: #{e.message}"
             false
           end
         end

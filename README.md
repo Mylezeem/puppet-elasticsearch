@@ -218,12 +218,12 @@ elasticsearch::ruby { 'elasticsearch': }
 ###Connection Validator
 
 This module offers a way to make sure an instance has been started and is up and running before
-doing a next action. This is done via the use of the `es_instance_conn_validator` resource.
+doing a next action. This is done via the use of the `es_instance_conn_validator` resource. It
+takes the name of the instance as a parameter and will accordingly perform the check on the right
+IP address and port.
+
 ```puppet
-es_instance_conn_validator { 'myinstance' :
-  server => 'es.example.com',
-  port   => '9200',
-}
+es_instance_conn_validator { 'myinstance' : }
 ```
 
 A common use would be for example :
